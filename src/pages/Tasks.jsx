@@ -1,18 +1,43 @@
+import { useState } from 'react';
 import { useTaskStore } from '../store/taskStore';
-import { CheckCircle2, Circle, Trash2, ListTodo, CheckCircle, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, ListTodo, CheckCircle, Clock, Plus, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const CATEGORIES = ['DSA', 'Semester Study', 'Project Building', 'Extra Learning'];
 
 export default function Tasks() {
-  const { tasks, toggleTaskCompletion, deleteTask } = useTaskStore();
+  const { tasks, addTask, toggleTaskCompletion, deleteTask } = useTaskStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState(CATEGORIES[0]);
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.completed).length;
   const pendingTasks = totalTasks - completedTasks;
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    addTask({ title: title.trim(), category });
+    setTitle('');
+    setCategory(CATEGORIES[0]);
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="space-y-8 fade-in">
-      <header>
-        <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">Tasks</h2>
-        <p className="text-sm text-zinc-400 mt-1">Manage and track your active tasks.</p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">Tasks</h2>
+          <p className="text-sm text-zinc-400 mt-1">Manage and track your active tasks.</p>
+        </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:bg-zinc-800 text-sm font-medium text-zinc-300 transition-all hover:text-white"
+        >
+          <Plus className="w-4 h-4" />
+          Add Task
+        </button>
       </header>
 
       {/* Statistics */}
@@ -102,6 +127,83 @@ export default function Tasks() {
           </div>
         )}
       </div>
+
+      {/* Add Task Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsModalOpen(false)}
+            />
+            <motion.div
+              className="relative w-full max-w-md mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900/90 backdrop-blur-xl p-6 shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold tracking-tight text-zinc-100">New Task</h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="What do you want to work on?"
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-transparent transition-all text-sm"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:border-transparent transition-all text-sm appearance-none cursor-pointer"
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat} className="bg-zinc-800">{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-100 text-zinc-900 hover:bg-white transition-all text-sm font-semibold"
+                  >
+                    Create Task
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
