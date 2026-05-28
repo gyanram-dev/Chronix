@@ -3,6 +3,7 @@ import { useTaskStore } from '../store/taskStore';
 import { useProgressStore } from '../store/progressStore';
 import { useAcademicStore } from '../store/academicStore';
 import { usePlannerStore } from '../store/plannerStore';
+import { useFocusStore } from '../store/focusStore';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
@@ -13,7 +14,7 @@ import StatCard from '../components/ui/StatCard';
 import GridLayout from '../components/ui/GridLayout';
 import {
   CheckCircle, Clock, TrendingUp, TrendingDown, Zap, BookOpen,
-  Lightbulb, Target,
+  Lightbulb, Target, Calendar,
 } from 'lucide-react';
 
 const THEME = {
@@ -36,11 +37,28 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
+function getWeekLabel(isoStr) {
+  const d = new Date(isoStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d.setDate(diff));
+  return `${mon.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+}
+
+function getWeekKey(isoStr) {
+  const d = new Date(isoStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d.setDate(diff));
+  return mon.toISOString().split('T')[0];
+}
+
 export default function Analytics() {
   const tasks = useTaskStore((s) => s.tasks);
   const categories = useProgressStore((s) => s.categories);
   const semesters = useAcademicStore((s) => s.semesters);
   const plannerSections = usePlannerStore((s) => s.sections);
+  const sessions = useFocusStore((s) => s.sessions);
 
   const activeSemester = useMemo(() => semesters.find((s) => s.activeSemester) || semesters[0], [semesters]);
   const subjects = useMemo(() => activeSemester?.subjects || [], [activeSemester]);
@@ -97,6 +115,25 @@ export default function Analytics() {
 
     return { focusHours, taskPie, subjectProgress, trend };
   }, [categories, stats, tasks, subjects, plannerSections]);
+
+  const weeklyTrend = useMemo(() => {
+    const weeksMap = {};
+    sessions.forEach((s) => {
+      if (!s.endTime || !s.durationSeconds) return;
+      const key = getWeekKey(s.endTime);
+      if (!weeksMap[key]) {
+        weeksMap[key] = { week: getWeekLabel(s.endTime), dsa: 0, semester: 0, projects: 0, extra: 0 };
+      }
+      const cat = s.category || 'semester';
+      if (weeksMap[key][cat] !== undefined) {
+        weeksMap[key][cat] += s.durationSeconds / 3600;
+      }
+    });
+    return Object.entries(weeksMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-8)
+      .map(([, v]) => v);
+  }, [sessions]);
 
   const productivityScore = useMemo(() => {
     const scores = chartData.trend.map((d) => d.Score);
@@ -186,6 +223,33 @@ export default function Analytics() {
             </ResponsiveContainer>
           ) : (
             <div className="h-[260px] flex items-center justify-center text-zinc-600 text-sm">No study hours tracked yet</div>
+          )}
+        </div>
+      </div>
+
+      {/* Weekly Trends */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium tracking-tight text-zinc-200 flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-zinc-500" />
+          Weekly Trends
+        </h3>
+        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-6">
+          <p className="text-sm text-zinc-400 mb-6">Focus hours by category per week</p>
+          {weeklyTrend.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={weeklyTrend} barGap={2} barCategoryGap="15%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis dataKey="week" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a' }} />
+                <Bar dataKey="dsa" name="DSA" stackId="a" radius={[0, 0, 0, 0]} fill="#60a5fa" />
+                <Bar dataKey="semester" name="Semester" stackId="a" radius={[0, 0, 0, 0]} fill="#a78bfa" />
+                <Bar dataKey="projects" name="Projects" stackId="a" radius={[0, 0, 0, 0]} fill="#34d399" />
+                <Bar dataKey="extra" name="Extra" stackId="a" radius={[6, 6, 0, 0]} fill="#fbbf24" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[260px] flex items-center justify-center text-zinc-600 text-sm">Complete focus sessions to see weekly trends</div>
           )}
         </div>
       </div>

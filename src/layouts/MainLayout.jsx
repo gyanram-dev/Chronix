@@ -1,19 +1,38 @@
+import { useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, BookOpen, Calendar, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Calendar, Timer, BarChart3, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useSettingsStore } from '../store/settingsStore';
+import { useAcademicStore } from '../store/academicStore';
 
 export default function MainLayout() {
+  const compactMode = useSettingsStore((s) => s.appearance.compactMode);
+  const accentColor = useSettingsStore((s) => s.appearance.accentColor);
+  const currentSemester = useSettingsStore((s) => s.academic.currentSemester);
+  const setActiveSemester = useAcademicStore((s) => s.setActiveSemester);
+
+  useEffect(() => {
+    if (currentSemester) {
+      setActiveSemester(currentSemester);
+    }
+  }, [currentSemester, setActiveSemester]);
+
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
     { name: 'Academic', path: '/syllabus', icon: BookOpen },
     { name: 'Planner', path: '/planner', icon: Calendar },
+    { name: 'Focus', path: '/focus', icon: Timer },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   return (
-    <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans selection:bg-zinc-800 selection:text-white">
+    <div
+      data-compact={compactMode ? 'true' : 'false'}
+      data-accent={accentColor}
+      className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans selection:bg-zinc-800 selection:text-white"
+    >
       <aside className="w-64 bg-zinc-900/40 backdrop-blur-xl border-r border-zinc-800/40 flex flex-col m-4 rounded-2xl shadow-2xl relative z-10">
         <div className="p-6 flex-1 flex flex-col">
           <motion.h1

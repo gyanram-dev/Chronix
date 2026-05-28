@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Academic from './pages/Academic';
 import DailyPlanner from './pages/DailyPlanner';
+import Focus from './pages/Focus';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="tasks" element={<Tasks />} />
           <Route path="syllabus" element={<Academic />} />
           <Route path="planner" element={<DailyPlanner />} />
+          <Route path="focus" element={<Focus />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>

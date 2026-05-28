@@ -4,6 +4,8 @@ const COLORS = [
   { id: 'purple', class: 'bg-purple-500', ring: 'ring-purple-400' },
   { id: 'amber', class: 'bg-amber-500', ring: 'ring-amber-400' },
   { id: 'rose', class: 'bg-rose-500', ring: 'ring-rose-400' },
+  { id: 'sky', class: 'bg-sky-500', ring: 'ring-sky-400' },
+  { id: 'indigo', class: 'bg-indigo-500', ring: 'ring-indigo-400' },
 ];
 
 export default function ColorPicker({ value, onChange, label }) {
