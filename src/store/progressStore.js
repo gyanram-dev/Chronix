@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 const initialCategories = [
   { id: 'dsa', name: 'DSA', targetHours: 2, completedHours: 0, percentage: 0 },
@@ -7,30 +8,43 @@ const initialCategories = [
   { id: 'extra', name: 'Extra Learning', targetHours: 1, completedHours: 0, percentage: 0 },
 ];
 
-export const useProgressStore = create((set) => ({
-  categories: initialCategories,
-  
-  incrementProgress: (id) => set((state) => ({
-    categories: state.categories.map(cat => {
-      if (cat.id === id) {
-        const newCompleted = Math.min(cat.completedHours + 0.5, cat.targetHours);
-        const newPercentage = Math.round((newCompleted / cat.targetHours) * 100);
-        return { ...cat, completedHours: newCompleted, percentage: newPercentage };
-      }
-      return cat;
-    })
-  })),
-  
-  decrementProgress: (id) => set((state) => ({
-    categories: state.categories.map(cat => {
-      if (cat.id === id) {
-        const newCompleted = Math.max(cat.completedHours - 0.5, 0);
-        const newPercentage = Math.round((newCompleted / cat.targetHours) * 100);
-        return { ...cat, completedHours: newCompleted, percentage: newPercentage };
-      }
-      return cat;
-    })
-  })),
-  
-  resetDailyProgress: () => set({ categories: initialCategories }),
-}));
+export const useProgressStore = create(
+  persist(
+    (set) => ({
+      categories: initialCategories,
+
+      incrementProgress: (id) => set((state) => ({
+        categories: state.categories.map(cat => {
+          if (cat.id === id) {
+            const newCompleted = Math.min(cat.completedHours + 0.5, cat.targetHours);
+            const newPercentage = Math.round((newCompleted / cat.targetHours) * 100);
+            return { ...cat, completedHours: newCompleted, percentage: newPercentage };
+          }
+          return cat;
+        }),
+      })),
+
+      decrementProgress: (id) => set((state) => ({
+        categories: state.categories.map(cat => {
+          if (cat.id === id) {
+            const newCompleted = Math.max(cat.completedHours - 0.5, 0);
+            const newPercentage = Math.round((newCompleted / cat.targetHours) * 100);
+            return { ...cat, completedHours: newCompleted, percentage: newPercentage };
+          }
+          return cat;
+        }),
+      })),
+
+      resetDay: () => set((state) => ({
+        categories: state.categories.map(cat => ({
+          ...cat,
+          completedHours: 0,
+          percentage: 0,
+        })),
+      })),
+    }),
+    {
+      name: 'chronix-progress',
+    }
+  )
+);

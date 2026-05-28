@@ -3,7 +3,7 @@ import ProgressCard from '../components/ProgressCard';
 import { Target, Trophy, RotateCcw, Sparkles } from 'lucide-react';
 
 export default function Dashboard() {
-  const { categories, resetDailyProgress } = useProgressStore();
+  const { categories, resetDay } = useProgressStore();
 
   const totalTargetHours = categories.reduce((acc, cat) => acc + cat.targetHours, 0);
   const totalCompletedHours = categories.reduce((acc, cat) => acc + cat.completedHours, 0);
@@ -13,6 +13,12 @@ export default function Dashboard() {
   const totalCategories = categories.length;
 
   const isAllCompleted = completedCategories === totalCategories;
+
+  const handleResetDay = () => {
+    if (window.confirm('Reset all progress for today? This will set all study hours back to zero.')) {
+      resetDay();
+    }
+  };
 
   return (
     <div className="space-y-8 fade-in">
@@ -24,7 +30,7 @@ export default function Dashboard() {
           <p className="text-sm text-zinc-400 mt-1">Track your study hours and hit your daily goals.</p>
         </div>
         <button
-          onClick={resetDailyProgress}
+          onClick={handleResetDay}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:bg-zinc-800 text-sm font-medium text-zinc-300 transition-all hover:text-white"
         >
           <RotateCcw className="w-4 h-4" />
