@@ -7,6 +7,11 @@ import {
   ArrowRight, AlertCircle, Sparkles, ListTodo, Trash2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import PageContainer from '../components/ui/PageContainer';
+import StatCard from '../components/ui/StatCard';
+import Button from '../components/ui/Button';
+import ProgressBar from '../components/ui/ProgressBar';
+import GridLayout from '../components/ui/GridLayout';
 
 const PRIORITY_CONFIG = {
   high: { label: 'High', dot: 'bg-red-500', bg: 'bg-red-500/10', text: 'text-red-400' },
@@ -50,15 +55,13 @@ export default function DailyPlanner() {
 
   const suggestions = useMemo(() => {
     const result = [];
-
     if (activeSemester) {
       activeSemester.subjects.forEach((subject) => {
         subject.topics.filter((t) => !t.completed && !planItemIds.has(t.id)).forEach((topic) => {
-          const sectionId = mapToSection(subject.name, '');
           result.push({
             id: crypto.randomUUID(),
             title: `${subject.name}: ${topic.title}`,
-            sectionId,
+            sectionId: mapToSection(subject.name, ''),
             estimatedMinutes: 60,
             priority: 'medium',
             sourceType: 'academic',
@@ -67,20 +70,17 @@ export default function DailyPlanner() {
         });
       });
     }
-
     tasks.filter((t) => !t.completed && !planItemIds.has(t.id)).forEach((task) => {
-      const sectionId = mapToSection(task.title, task.category);
       result.push({
         id: crypto.randomUUID(),
         title: task.title,
-        sectionId,
+        sectionId: mapToSection(task.title, task.category),
         estimatedMinutes: 30,
         priority: 'high',
         sourceType: 'task',
         sourceId: task.id,
       });
     });
-
     return result.filter((s) => !dismissedSuggestions.has(s.id));
   }, [activeSemester, tasks, planItemIds, dismissedSuggestions]);
 
@@ -89,27 +89,12 @@ export default function DailyPlanner() {
   const totalHours = sections.reduce((acc, s) => acc + s.items.reduce((h, i) => h + i.estimatedMinutes, 0), 0);
   const highPriorityCount = sections.reduce((acc, s) => acc + s.items.filter((i) => i.priority === 'high' && !i.completed).length, 0);
 
-  const handleAddItem = (sectionId) => {
-    if (newItemTitle.trim()) {
-      addToPlan(sectionId, {
-        title: newItemTitle.trim(),
-        estimatedMinutes: 30,
-        priority: 'medium',
-        completed: false,
-        sourceType: 'custom',
-        sourceId: null,
-      });
-      setNewItemTitle('');
-      setAddingItem(null);
-    }
-  };
-
   const toggleSection = (id) => {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
-    <div className="space-y-8 fade-in">
+    <PageContainer>
       <header className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-1">
@@ -123,47 +108,13 @@ export default function DailyPlanner() {
         </div>
       </header>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-4 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300">
-            <ListTodo className="w-5 h-5 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-xl font-semibold text-white">{totalItems}</p>
-            <p className="text-[11px] text-zinc-400 uppercase tracking-wider font-medium">Planned</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-emerald-900/20 bg-emerald-950/10 p-4 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-emerald-900/30 flex items-center justify-center text-emerald-400">
-            <CheckCircle2 className="w-5 h-5 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-xl font-semibold text-emerald-400">{completedItems}</p>
-            <p className="text-[11px] text-emerald-500/70 uppercase tracking-wider font-medium">Done</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-4 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300">
-            <Clock className="w-5 h-5 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-xl font-semibold text-white">{Math.round(totalHours / 60)}h {totalHours % 60}m</p>
-            <p className="text-[11px] text-zinc-400 uppercase tracking-wider font-medium">Planned</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-amber-900/20 bg-amber-950/10 p-4 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center text-amber-400">
-            <AlertCircle className="w-5 h-5 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-xl font-semibold text-amber-400">{highPriorityCount}</p>
-            <p className="text-[11px] text-amber-500/70 uppercase tracking-wider font-medium">Priority</p>
-          </div>
-        </div>
-      </div>
+      <GridLayout columns={4}>
+        <StatCard icon={<ListTodo className="w-5 h-5 stroke-[1.5]" />} value={totalItems} label="Planned" />
+        <StatCard icon={<CheckCircle2 className="w-5 h-5 stroke-[1.5]" />} value={completedItems} label="Done" accent />
+        <StatCard icon={<Clock className="w-5 h-5 stroke-[1.5]" />} value={`${Math.round(totalHours / 60)}h ${totalHours % 60}m`} label="Hours" />
+        <StatCard icon={<AlertCircle className="w-5 h-5 stroke-[1.5]" />} value={highPriorityCount} label="Priority" accent={false} />
+      </GridLayout>
 
-      {/* Suggestions Panel */}
       {suggestions.length > 0 && (
         <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/10 p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -184,27 +135,24 @@ export default function DailyPlanner() {
                     </span>
                   )}
                   <span className="text-[11px] text-zinc-600 font-mono flex-shrink-0">{suggestion.estimatedMinutes}m</span>
-                  <button
+                  <Button
+                    variant="ghost" size="icon"
                     onClick={() => addToPlan(suggestion.sectionId, {
-                      title: suggestion.title,
-                      estimatedMinutes: suggestion.estimatedMinutes,
-                      priority: suggestion.priority,
-                      completed: false,
-                      sourceType: suggestion.sourceType,
-                      sourceId: suggestion.sourceId,
+                      title: suggestion.title, estimatedMinutes: suggestion.estimatedMinutes,
+                      priority: suggestion.priority, completed: false,
+                      sourceType: suggestion.sourceType, sourceId: suggestion.sourceId,
                     })}
-                    className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-emerald-400 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
                     title="Add to plan"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost" size="icon"
                     onClick={() => setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]))}
-                    className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-600 hover:text-zinc-400 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
                     title="Dismiss"
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </Button>
                 </div>
               );
             })}
@@ -212,7 +160,6 @@ export default function DailyPlanner() {
         </div>
       )}
 
-      {/* Tomorrow Items Info */}
       {tomorrowItems.length > 0 && (
         <div className="rounded-2xl border border-zinc-800/40 bg-zinc-900/30 p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -222,8 +169,7 @@ export default function DailyPlanner() {
         </div>
       )}
 
-      {/* Planner Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <GridLayout columns={2}>
         {sections.map((section) => {
           const theme = SECTION_THEME[section.id];
           const isOpen = expandedSections[section.id] !== false;
@@ -258,14 +204,7 @@ export default function DailyPlanner() {
                     <ChevronDown className="w-4 h-4" />
                   </motion.div>
                 </div>
-                <div className="relative w-full h-2 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/50 shadow-inner">
-                  <motion.div
-                    className={`absolute top-0 left-0 h-full rounded-full ${theme.bar}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                  />
-                </div>
+                <ProgressBar progress={progress} color={theme.bar} />
               </button>
 
               <AnimatePresence>
@@ -305,20 +244,12 @@ export default function DailyPlanner() {
                               </div>
                               <span className="text-[11px] text-zinc-600 font-mono flex-shrink-0">{item.estimatedMinutes}m</span>
                               <div className="flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0">
-                                <button
-                                  onClick={() => moveToTomorrow(section.id, item.id)}
-                                  className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-all"
-                                  title="Move to tomorrow"
-                                >
+                                <Button variant="ghost" size="icon-sm" onClick={() => moveToTomorrow(section.id, item.id)} title="Move to tomorrow">
                                   <ArrowRight className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => removeFromPlan(section.id, item.id)}
-                                  className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-red-400 transition-all"
-                                  title="Remove"
-                                >
+                                </Button>
+                                <Button variant="ghost" size="icon-sm" onClick={() => removeFromPlan(section.id, item.id)} title="Remove">
                                   <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           );
@@ -330,26 +261,23 @@ export default function DailyPlanner() {
                           <input
                             value={newItemTitle}
                             onChange={(e) => setNewItemTitle(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(section.id); if (e.key === 'Escape') { setAddingItem(null); setNewItemTitle(''); } }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { if (newItemTitle.trim()) { addToPlan(section.id, { title: newItemTitle.trim(), estimatedMinutes: 30, priority: 'medium', completed: false, sourceType: 'custom', sourceId: null }); setNewItemTitle(''); setAddingItem(null); } } if (e.key === 'Escape') { setAddingItem(null); setNewItemTitle(''); } }}
                             placeholder="What do you want to study?"
                             className="bg-zinc-800/80 border border-zinc-700/50 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 flex-1 min-w-0"
                             autoFocus
                           />
-                          <button onClick={() => handleAddItem(section.id)} className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition-all">
+                          <Button variant="ghost" size="icon" onClick={() => { if (newItemTitle.trim()) { addToPlan(section.id, { title: newItemTitle.trim(), estimatedMinutes: 30, priority: 'medium', completed: false, sourceType: 'custom', sourceId: null }); setNewItemTitle(''); setAddingItem(null); } }}>
                             <Plus className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => { setAddingItem(null); setNewItemTitle(''); }} className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-300 transition-all">
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => { setAddingItem(null); setNewItemTitle(''); }}>
                             <X className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setAddingItem(section.id)}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 mt-1 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 transition-all text-sm"
-                        >
+                        <Button variant="add-row" onClick={() => setAddingItem(section.id)}>
                           <Plus className="w-3.5 h-3.5" />
                           Add item
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </motion.div>
@@ -358,7 +286,7 @@ export default function DailyPlanner() {
             </div>
           );
         })}
-      </div>
-    </div>
+      </GridLayout>
+    </PageContainer>
   );
 }

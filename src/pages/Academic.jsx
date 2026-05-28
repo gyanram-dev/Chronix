@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { useAcademicStore } from '../store/academicStore';
 import AcademicCard from '../components/AcademicCard';
 import { BookOpen, CheckCircle, Target, Plus, Pencil, Trash2, X, Check, GraduationCap } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import PageContainer from '../components/ui/PageContainer';
+import StatCard from '../components/ui/StatCard';
+import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
+import EmptyState from '../components/ui/EmptyState';
+import GridLayout from '../components/ui/GridLayout';
 
 export default function Academic() {
   const { semesters, setActiveSemester, addSemester, deleteSemester, editSemester, addSubject } = useAcademicStore();
@@ -44,7 +49,7 @@ export default function Academic() {
   };
 
   return (
-    <div className="space-y-8 fade-in">
+    <PageContainer>
       <header className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">Academic Workspace</h2>
@@ -52,7 +57,6 @@ export default function Academic() {
         </div>
       </header>
 
-      {/* Semester Switcher */}
       <div className="flex items-center gap-3 flex-wrap">
         <GraduationCap className="w-5 h-5 text-zinc-500 flex-shrink-0" />
         {semesters.map((sem) => (
@@ -65,18 +69,8 @@ export default function Academic() {
                   className="bg-zinc-800 border border-zinc-700/50 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-600 w-32"
                   autoFocus
                 />
-                <button
-                  onClick={() => handleSaveSemester(sem.id)}
-                  className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition-all"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setEditingSemId(null)}
-                  className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-300 transition-all"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <Button variant="ghost" size="icon" onClick={() => handleSaveSemester(sem.id)}><Check className="w-3.5 h-3.5" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setEditingSemId(null)}><X className="w-3.5 h-3.5" /></Button>
               </div>
             ) : (
               <div className="flex items-center gap-1">
@@ -92,197 +86,81 @@ export default function Academic() {
                 </button>
                 {sem.activeSemester && (
                   <div className="flex items-center gap-0.5">
-                    <button
-                      onClick={() => { setEditingSemId(sem.id); setEditingSemName(sem.name); }}
-                      className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-all"
-                      title="Edit semester"
-                    >
+                    <Button variant="ghost" size="icon-sm" onClick={() => { setEditingSemId(sem.id); setEditingSemName(sem.name); }} title="Edit semester">
                       <Pencil className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Delete "${sem.name}" and all its subjects?`)) {
-                          deleteSemester(sem.id);
-                        }
-                      }}
-                      className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-red-400 transition-all"
-                      title="Delete semester"
-                    >
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" onClick={() => { if (window.confirm(`Delete "${sem.name}" and all its subjects?`)) deleteSemester(sem.id); }} title="Delete semester">
                       <Trash2 className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
             )}
           </div>
         ))}
-        <button
-          onClick={() => setShowSemModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-all border border-dashed border-zinc-700/50"
-        >
+        <Button variant="ghost" onClick={() => setShowSemModal(true)} className="border border-dashed border-zinc-700/50">
           <Plus className="w-3.5 h-3.5" />
           Add Semester
-        </button>
+        </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-5 shadow-sm flex items-center gap-4 transition-all hover:bg-zinc-900/60">
-          <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300">
-            <BookOpen className="w-6 h-6 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-white">{subjects.length}</p>
-            <p className="text-xs text-zinc-400 uppercase tracking-wider font-medium mt-0.5">Subjects</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-emerald-900/20 bg-emerald-950/10 p-5 shadow-sm flex items-center gap-4 transition-all hover:bg-emerald-950/20">
-          <div className="w-12 h-12 rounded-full bg-emerald-900/30 flex items-center justify-center text-emerald-400">
-            <CheckCircle className="w-6 h-6 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-emerald-400">{completedTopics}</p>
-            <p className="text-xs text-emerald-500/70 uppercase tracking-wider font-medium mt-0.5">Topics Done</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-5 shadow-sm flex items-center gap-4 transition-all hover:bg-zinc-900/60">
-          <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300">
-            <Target className="w-6 h-6 stroke-[1.5]" />
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-white">{overallProgress}%</p>
-            <p className="text-xs text-zinc-400 uppercase tracking-wider font-medium mt-0.5">Overall Progress</p>
-          </div>
-        </div>
-      </div>
+      <GridLayout columns={3}>
+        <StatCard icon={<BookOpen className="w-6 h-6 stroke-[1.5]" />} value={subjects.length} label="Subjects" />
+        <StatCard icon={<CheckCircle className="w-6 h-6 stroke-[1.5]" />} value={completedTopics} label="Topics Done" accent />
+        <StatCard icon={<Target className="w-6 h-6 stroke-[1.5]" />} value={`${overallProgress}%`} label="Overall Progress" />
+      </GridLayout>
 
-      {/* Subjects */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium tracking-tight text-zinc-200">Subjects</h3>
-          <button
-            onClick={() => setShowSubjectModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:bg-zinc-800 text-sm font-medium text-zinc-300 transition-all hover:text-white"
-          >
+          <Button variant="secondary" onClick={() => setShowSubjectModal(true)}>
             <Plus className="w-4 h-4" />
             Add Subject
-          </button>
+          </Button>
         </div>
 
         {subjects.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/20">
-            <p className="text-zinc-500 text-sm">No subjects yet. Add your first subject to get started.</p>
-          </div>
+          <EmptyState message="No subjects yet. Add your first subject to get started." />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <GridLayout columns={2}>
             {subjects.map((subject, idx) => (
               <AcademicCard key={subject.id} subject={subject} semesterId={activeSemester.id} colorIndex={idx} />
             ))}
-          </div>
+          </GridLayout>
         )}
       </div>
 
-      {/* Add Semester Modal */}
-      <AnimatePresence>
-        {showSemModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setShowSemModal(false)}
-            />
-            <motion.div
-              className="relative w-full max-w-sm mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900/90 backdrop-blur-xl p-6 shadow-2xl"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-semibold tracking-tight text-zinc-100">New Semester</h3>
-                <button onClick={() => setShowSemModal(false)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleAddSemester(); }}
-                className="space-y-5"
-              >
-                <input
-                  value={semName}
-                  onChange={(e) => setSemName(e.target.value)}
-                  placeholder="e.g. Semester 5"
-                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all text-sm"
-                  autoFocus
-                />
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowSemModal(false)} className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all text-sm font-medium">
-                    Cancel
-                  </button>
-                  <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-100 text-zinc-900 hover:bg-white transition-all text-sm font-semibold">
-                    Create
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Modal isOpen={showSemModal} onClose={() => setShowSemModal(false)} title="New Semester">
+        <form onSubmit={(e) => { e.preventDefault(); handleAddSemester(); }} className="space-y-5">
+          <input
+            value={semName}
+            onChange={(e) => setSemName(e.target.value)}
+            placeholder="e.g. Semester 5"
+            className="w-full px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all text-sm"
+            autoFocus
+          />
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={() => setShowSemModal(false)} className="flex-1">Cancel</Button>
+            <Button variant="primary" type="submit" className="flex-1">Create</Button>
+          </div>
+        </form>
+      </Modal>
 
-      {/* Add Subject Modal */}
-      <AnimatePresence>
-        {showSubjectModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setShowSubjectModal(false)}
-            />
-            <motion.div
-              className="relative w-full max-w-sm mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900/90 backdrop-blur-xl p-6 shadow-2xl"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-semibold tracking-tight text-zinc-100">New Subject</h3>
-                <button onClick={() => setShowSubjectModal(false)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleAddSubject(); }}
-                className="space-y-5"
-              >
-                <input
-                  value={subjectName}
-                  onChange={(e) => setSubjectName(e.target.value)}
-                  placeholder="e.g. Database Systems"
-                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all text-sm"
-                  autoFocus
-                />
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowSubjectModal(false)} className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-all text-sm font-medium">
-                    Cancel
-                  </button>
-                  <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-100 text-zinc-900 hover:bg-white transition-all text-sm font-semibold">
-                    Create
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      <Modal isOpen={showSubjectModal} onClose={() => setShowSubjectModal(false)} title="New Subject">
+        <form onSubmit={(e) => { e.preventDefault(); handleAddSubject(); }} className="space-y-5">
+          <input
+            value={subjectName}
+            onChange={(e) => setSubjectName(e.target.value)}
+            placeholder="e.g. Database Systems"
+            className="w-full px-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-600 transition-all text-sm"
+            autoFocus
+          />
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={() => setShowSubjectModal(false)} className="flex-1">Cancel</Button>
+            <Button variant="primary" type="submit" className="flex-1">Create</Button>
+          </div>
+        </form>
+      </Modal>
+    </PageContainer>
   );
 }
