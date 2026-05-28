@@ -1,11 +1,12 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, BookOpen, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BookOpen, Calendar, BarChart3, Settings } from 'lucide-react';
 
 export default function MainLayout() {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
     { name: 'Academic', path: '/syllabus', icon: BookOpen },
+    { name: 'Planner', path: '/planner', icon: Calendar },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
