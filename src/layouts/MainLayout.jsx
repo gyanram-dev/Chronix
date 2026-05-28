@@ -5,7 +5,7 @@ export default function MainLayout() {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: CheckSquare },
-    { name: 'Syllabus', path: '/syllabus', icon: BookOpen },
+    { name: 'Academic', path: '/syllabus', icon: BookOpen },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
-import Syllabus from './pages/Syllabus';
+import Academic from './pages/Academic';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 
@@ -14,7 +14,7 @@ export default function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="tasks" element={<Tasks />} />
-          <Route path="syllabus" element={<Syllabus />} />
+          <Route path="syllabus" element={<Academic />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>
